@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	ownerLength    = 6
+	ownerLength    = 7
 	currenciesPool = []string{"EUR", "USD", "CAD", "AUD", "GBP", "BTC", "NIG"}
 	pool           = "aqwertyuioplkjhgfdsazxcvbm"
 	minBalance     = 10
