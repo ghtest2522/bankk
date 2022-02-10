@@ -19,4 +19,5 @@ test:
 login:
 	docker exec -it postg psql -U root -d bankdb   
 
-	
+mock:
+	mockgen -package mockdb -destination db/mock/store.go bank/db/sqlc Store    
