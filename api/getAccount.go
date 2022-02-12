@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bank/util"
 	"database/sql"
 	"net/http"
 
@@ -16,21 +17,20 @@ func (server *HttpServer) getAccount(ctx *gin.Context) {
 	err := ctx.BindUri(&req)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, err)
+		SendError[any](ctx, http.StatusBadRequest, err)
 		return
 	}
 
 	result, err := server.store.GetAccount(ctx, req.ID)
 	if err == sql.ErrNoRows {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		SendError[any](ctx, http.StatusNotFound, err)
 		return
 	}
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, err)
+		SendError[any](ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, result)
-
+	SendOKRespnse(ctx, util.AccountWasFound, result)
 }

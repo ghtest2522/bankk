@@ -1,37 +1,30 @@
 package api
 
 import (
-	db "bank/db/sqlc"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-type GenericType interface{ db.Account | db.Entry }
-
-type ResponseResult[T GenericType] struct {
+type ResponseResult[T any] struct {
 	Message string
 	Data    T
 }
 
-type ResponseErrorResult struct {
-	Message string
+func createError[T any](err error) ResponseResult[T] {
+	return ResponseResult[T]{Message: err.Error()}
 }
 
-func createError(err error) ResponseErrorResult {
-	return ResponseErrorResult{Message: err.Error()}
-}
-
-func SendError(ctx *gin.Context, httpStatus int, err error) {
-	errorMsg := createError(err)
+func SendError[T any](ctx *gin.Context, httpStatus int, err error) {
+	errorMsg := createError[T](err)
 	ctx.JSON(httpStatus, errorMsg)
 }
 
-func createOKRespone[T GenericType](msg string, data T) ResponseResult[T] {
+func createOKRespone[T any](msg string, data T) ResponseResult[T] {
 	return ResponseResult[T]{Message: msg, Data: data}
 }
 
-func SendOKRespnse[T GenericType](ctx *gin.Context, msg string, data T) {
+func SendOKRespnse[T any](ctx *gin.Context, msg string, data T) {
 	response := createOKRespone(msg, data)
 
 	ctx.JSON(http.StatusOK, response)
