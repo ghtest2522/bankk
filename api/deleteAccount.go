@@ -1,6 +1,7 @@
 package api
 
 import (
+	db "bank/db/sqlc"
 	"bank/util"
 	"net/http"
 
@@ -15,15 +16,15 @@ func (server *HttpServer) deleteAccount(ctx *gin.Context) {
 	var req DeleteAccountRequest
 	err := ctx.BindUri(&req)
 	if err != nil {
-		server.resultSender.SendError(ctx, http.StatusBadRequest, err)
+		SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
 	err = server.store.DeleteAccount(ctx, req.ID)
 	if err != nil {
-		server.resultSender.SendError(ctx, http.StatusInternalServerError, err)
+		SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	server.resultSender.SendOKRespnse(ctx, util.AccountWasDeleted, nil)
+	SendOKRespnse(ctx, util.AccountWasDeleted, db.Account{})
 }

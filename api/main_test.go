@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"os"
 	"testing"
 
@@ -10,6 +11,11 @@ import (
 
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
+	code := m.Run()
 
-	os.Exit(m.Run())
+	if code != 0 {
+		log.Fatalf("Failed to run")
+	}
+
+	os.Exit(code)
 }

@@ -18,7 +18,7 @@ func (server *HttpServer) updateAccountBalance(ctx *gin.Context) {
 	err := ctx.BindJSON(&req)
 
 	if err != nil {
-		server.resultSender.SendError(ctx, http.StatusBadRequest, err)
+		SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -29,9 +29,9 @@ func (server *HttpServer) updateAccountBalance(ctx *gin.Context) {
 	result, err := server.store.AddBalanceToAccount(ctx, args)
 
 	if err != nil {
-		server.resultSender.SendError(ctx, http.StatusInternalServerError, err)
+		SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	server.resultSender.SendOKRespnse(ctx, util.AccountWasUpdated, result)
+	SendOKRespnse(ctx, util.AccountWasUpdated, result)
 }
