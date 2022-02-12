@@ -10,7 +10,7 @@ import (
 
 type CreateAccountRequest struct {
 	Owner    string `json:"owner" binding:"required"`
-	Currency string `json:"currency" binding:"required,oneof=USD EUR"`
+	Currency string `json:"currency" binding:"required,oneof=USD EUR CAD AUD GBP BTC NIG"`
 }
 
 func (server *HttpServer) createAccount(ctx *gin.Context) {
@@ -18,7 +18,7 @@ func (server *HttpServer) createAccount(ctx *gin.Context) {
 	err := ctx.BindJSON(&req)
 
 	if err != nil {
-		SendError(ctx, http.StatusBadRequest, err)
+		SendError[any](ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -30,7 +30,7 @@ func (server *HttpServer) createAccount(ctx *gin.Context) {
 	result, err := server.store.CreateAccount(ctx, arg)
 
 	if err != nil {
-		SendError(ctx, http.StatusInternalServerError, err)
+		SendError[any](ctx, http.StatusInternalServerError, err)
 		return
 	}
 

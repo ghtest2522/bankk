@@ -16,13 +16,13 @@ func (server *HttpServer) deleteAccount(ctx *gin.Context) {
 	var req DeleteAccountRequest
 	err := ctx.BindUri(&req)
 	if err != nil {
-		SendError(ctx, http.StatusBadRequest, err)
+		SendError[any](ctx, http.StatusBadRequest, err)
 		return
 	}
 
 	err = server.store.DeleteAccount(ctx, req.ID)
 	if err != nil {
-		SendError(ctx, http.StatusInternalServerError, err)
+		SendError[any](ctx, http.StatusInternalServerError, err)
 		return
 	}
 

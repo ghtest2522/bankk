@@ -4,11 +4,8 @@ import (
 	mockdb "bank/db/mock"
 	db "bank/db/sqlc"
 	"bank/util"
-	"bytes"
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,22 +14,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type TestCase struct {
-	name          string
-	buildStubs    func(store *mockdb.MockStore)
-	checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder, message string)
-	accountID     int64
-	message       string
+type GetAccountData struct {
+	accountID int64
+	message   string
 }
 
 func TestGetAccountAPI(t *testing.T) {
-	account := createRandomAccount()
+	account := CreateRandomAccount()
 
-	testCases := []TestCase{
+	testCases := []TestCase[GetAccountData]{
 		{
-			name:      "OK",
-			message:   util.AccountWasFound,
-			accountID: account.ID,
+			name: "OK",
+			data: GetAccountData{message: util.AccountWasFound, accountID: account.ID},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
@@ -41,25 +34,32 @@ func TestGetAccountAPI(t *testing.T) {
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder, message string) {
 				statusCode := recorder.Code
 				require.Equal(t, statusCode, http.StatusOK)
-				checkForBodyMatch(t, recorder.Body, account, message)
+
+				result := ReadBodyRespone[db.Account](t, recorder.Body)
+				require.Equal(t, account, result.Data)
+				require.Equal(t, util.AccountWasFound, result.Message)
 			},
 		},
 		{
-			name:      "Bad Account ID",
-			accountID: 0,
+			name: "Bad Account ID",
+			data: GetAccountData{accountID: 0},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetAccount(gomock.Any(), gomock.Eq(gomock.Any())).
+					GetAccount(gomock.Any(), gomock.Eq(0)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder, message string) {
 				statusCode := recorder.Code
 				require.Equal(t, statusCode, http.StatusBadRequest)
+
+				result := ReadBodyRespone[any](t, recorder.Body)
+				require.Empty(t, result.Data)
+				require.NotZero(t, result.Message)
 			},
 		},
 		{
-			name:      "Not Found Account",
-			accountID: account.ID,
+			name: "Not Found Account",
+			data: GetAccountData{accountID: account.ID},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
@@ -69,11 +69,16 @@ func TestGetAccountAPI(t *testing.T) {
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder, message string) {
 				statusCode := recorder.Code
 				require.Equal(t, statusCode, http.StatusNotFound)
+
+				result := ReadBodyRespone[any](t, recorder.Body)
+				require.Empty(t, result.Data)
+				require.NotZero(t, result.Message)
+				require.Equal(t, sql.ErrNoRows.Error(), result.Message)
 			},
 		},
 		{
-			name:      "Internal Server Error",
-			accountID: account.ID,
+			name: "Internal Server Error",
+			data: GetAccountData{accountID: account.ID},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
@@ -83,6 +88,11 @@ func TestGetAccountAPI(t *testing.T) {
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder, message string) {
 				statusCode := recorder.Code
 				require.Equal(t, statusCode, http.StatusInternalServerError)
+
+				result := ReadBodyRespone[any](t, recorder.Body)
+				require.Empty(t, result.Data)
+				require.NotZero(t, result.Message)
+				require.Equal(t, sql.ErrConnDone.Error(), result.Message)
 			},
 		},
 	}
@@ -100,33 +110,14 @@ func TestGetAccountAPI(t *testing.T) {
 			recorder := httptest.NewRecorder()
 
 			// make request
-			url := fmt.Sprintf("/account/%d", tc.accountID)
+			url := fmt.Sprintf("/account/%d", tc.data.accountID)
 			req, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 			server.router.ServeHTTP(recorder, req)
 
 			// check response
-			tc.checkResponse(t, recorder, tc.message)
+			tc.checkResponse(t, recorder, tc.data.message)
 		})
 	}
 
-}
-
-func checkForBodyMatch(t *testing.T, body *bytes.Buffer, accout db.Account, message string) {
-	reader, err := ioutil.ReadAll(body)
-	require.NoError(t, err)
-
-	var result db.Account
-	err = json.Unmarshal(reader, &result)
-	require.NoError(t, err)
-	require.Equal(t, accout, result)
-}
-
-func createRandomAccount() db.Account {
-	return db.Account{
-		ID:       util.RandomInt(1, 1000),
-		Owner:    util.RandomOwner(),
-		Balance:  util.RandomBalance(),
-		Currency: util.RandomCurency(),
-	}
 }
