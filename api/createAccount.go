@@ -18,7 +18,7 @@ func (server *HttpServer) createAccount(ctx *gin.Context) {
 	err := ctx.BindJSON(&req)
 
 	if err != nil {
-		server.resultSender.SendError(ctx, http.StatusBadRequest, err)
+		SendError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -30,9 +30,9 @@ func (server *HttpServer) createAccount(ctx *gin.Context) {
 	result, err := server.store.CreateAccount(ctx, arg)
 
 	if err != nil {
-		server.resultSender.SendError(ctx, http.StatusInternalServerError, err)
+		SendError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	server.resultSender.SendOKRespnse(ctx, util.AccountWasCeated, result)
+	SendOKRespnse(ctx, util.AccountWasCeated, result)
 }

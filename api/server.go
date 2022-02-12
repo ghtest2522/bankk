@@ -2,7 +2,6 @@ package api
 
 import (
 	db "bank/db/sqlc"
-	"bank/util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,18 +14,17 @@ type Server interface {
 }
 
 type HttpServer struct {
-	store        db.Store
-	router       *gin.Engine
-	resultSender util.ResponseSender
+	store  db.Store
+	router *gin.Engine
 }
 
 func (server *HttpServer) Start(address string) error {
 	return server.router.Run(address)
 }
 
-func NewServer(store db.Store, sender util.ResponseSender) *HttpServer {
+func NewServer(store db.Store) *HttpServer {
 	router := gin.Default()
-	server := &HttpServer{store: store, router: router, resultSender: sender}
+	server := &HttpServer{store: store, router: router}
 
 	router.POST("accounts", server.createAccount)
 	router.PATCH("accounts", server.updateAccountBalance)

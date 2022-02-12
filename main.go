@@ -3,7 +3,6 @@ package main
 import (
 	"bank/api"
 	db "bank/db/sqlc"
-	"bank/util"
 	"database/sql"
 	"log"
 
@@ -24,8 +23,7 @@ func main() {
 	}
 
 	store := db.NewSQLStore(conn)
-	resultSender := util.NewJSONResponseSender()
-	server := api.NewServer(&store, resultSender)
+	server := api.NewServer(&store)
 
 	err = server.Start(address)
 	if err != nil {

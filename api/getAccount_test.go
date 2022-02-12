@@ -96,7 +96,7 @@ func TestGetAccountAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			// prepare server
-			server := NewServer(store, util.NewJSONResponseSender())
+			server := NewServer(store)
 			recorder := httptest.NewRecorder()
 
 			// make request

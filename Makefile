@@ -14,7 +14,7 @@ migratedown:
 	migrate -path db/migrations -database "postgresql://root:root@localhost:5432/bankdb?sslmode=disable" -verbose down
 
 test:
-	go test -v -cover ./...
+	go1.18beta1  test -v -cover ./...
 
 login:
 	docker exec -it postg psql -U root -d bankdb   
